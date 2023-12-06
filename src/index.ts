@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "fs"
 import * as day2 from "./02"
+import * as day4 from "./04"
 import * as day5 from "./05"
 import * as day6 from "./06"
 
@@ -10,6 +11,7 @@ Math.random = function () {
 
 const days = {
     "02": day2,
+    "04": day4,
     "05": day5,
     "06": day6,
 }
