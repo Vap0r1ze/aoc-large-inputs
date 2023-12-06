@@ -10,7 +10,7 @@ interface Options {
 }
 // The average size of an initial range would be MAX_VALUE / INITIAL_RATIO
 
-const MAP_STAGES = "seed soil fertilizer water light temperature humidity location".split(" ")
+const ORIG_MAP_STAGES = "seed soil fertilizer water light temperature humidity location".split(" ")
 export const presets: Record<string, Options> = {
     example: {
         MAX_VALUE: 100,
@@ -18,7 +18,7 @@ export const presets: Record<string, Options> = {
         INITIAL_RATIO: 10,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 4,
-        MAP_STAGES,
+        MAP_STAGES: ORIG_MAP_STAGES,
     },
     normal: {
         MAX_VALUE: 2**32,
@@ -26,7 +26,7 @@ export const presets: Record<string, Options> = {
         INITIAL_RATIO: 30,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 50,
-        MAP_STAGES,
+        MAP_STAGES: ORIG_MAP_STAGES,
     },
     large: {
         MAX_VALUE: 2**32,
@@ -34,29 +34,36 @@ export const presets: Record<string, Options> = {
         INITIAL_RATIO: 10000,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 10000,
-        MAP_STAGES,
+        MAP_STAGES: ORIG_MAP_STAGES,
         // MAP_STAGES: MAP_STAGES.concat(..."pesticide tillage compost irrigation pollination silage density brix germination ph erosion carbon yield".split(" ")),
     },
 }
 
 type Mapping = [dest: number, source: number, size: number]
 
-export function generate(OPTS: Options): string {
-    console.assert(OPTS.INITIAL_RATIO >= OPTS.INITIAL_COUNT, "Initial ratio should be greater than or equal to initial count")
+export function generate({
+    MAX_VALUE,
+    INITIAL_COUNT,
+    INITIAL_RATIO,
+    MAPPING_HOLES,
+    MAPPING_COUNT,
+    MAP_STAGES,
+}: Options): string {
+    console.assert(INITIAL_RATIO >= INITIAL_COUNT, "Initial ratio should be greater than or equal to initial count")
 
-    const initialMidpoints = Array.from({ length: OPTS.INITIAL_RATIO - 1 }, (_, i) => {
-        const value = Math.floor(random(`initial:${i}`) * OPTS.MAX_VALUE)
+    const initialMidpoints = Array.from({ length: INITIAL_RATIO - 1 }, (_, i) => {
+        const value = Math.floor(random(`initial:${i}`) * MAX_VALUE)
         return value
     })
     initialMidpoints.sort((a, b) => a - b)
     console.assert(
-        initialMidpoints.every((v, i, a) => a.indexOf(v) === i && v > 0 && v < OPTS.MAX_VALUE),
+        initialMidpoints.every((v, i, a) => a.indexOf(v) === i && v > 0 && v < MAX_VALUE),
         "Midpoints should not touch each other or the (0, MAX_VALUE) bounds"
     )
 
-    const initialSizes = Array.from({ length: OPTS.INITIAL_RATIO }, (_, i) => {
+    const initialSizes = Array.from({ length: INITIAL_RATIO }, (_, i) => {
         const min = i === 0 ? 0 : initialMidpoints[i - 1]
-        const max = i === OPTS.INITIAL_RATIO - 1 ? OPTS.MAX_VALUE : initialMidpoints[i]
+        const max = i === INITIAL_RATIO - 1 ? MAX_VALUE : initialMidpoints[i]
         return max - min
     })
     const initialRanges: [number, number][] = []
@@ -67,32 +74,32 @@ export function generate(OPTS: Options): string {
     }
 
     shuffle(initialRanges, "initial:ranges")
-    initialRanges.length = OPTS.INITIAL_COUNT
+    initialRanges.length = INITIAL_COUNT
 
     const stages: Mapping[][] = []
 
-    for (let stageIdx = 0; stageIdx < OPTS.MAP_STAGES.length - 1; stageIdx++) {
+    for (let stageIdx = 0; stageIdx < MAP_STAGES.length - 1; stageIdx++) {
         // TODO: Fix midpoints that touch each other or the (0, MAX_VALUE) bounds
-        const stageMidpoints = Array.from({ length: OPTS.MAPPING_COUNT - 1 }, (_, i) => {
-            const value = Math.floor(random(`${OPTS.MAP_STAGES[stageIdx]}:${i}`) * OPTS.MAX_VALUE)
+        const stageMidpoints = Array.from({ length: MAPPING_COUNT - 1 }, (_, i) => {
+            const value = Math.floor(random(`${MAP_STAGES[stageIdx]}:${i}`) * MAX_VALUE)
             return value
         })
         stageMidpoints.sort((a, b) => a - b)
         console.assert(
-            stageMidpoints.every((v, i, a) => a.indexOf(v) === i && v > 0 && v < OPTS.MAX_VALUE),
+            stageMidpoints.every((v, i, a) => a.indexOf(v) === i && v > 0 && v < MAX_VALUE),
             "Midpoints should not touch each other or the (0, MAX_VALUE) bounds"
         )
 
-        const mappingSizes = Array.from({ length: OPTS.MAPPING_COUNT }, (_, i) => {
+        const mappingSizes = Array.from({ length: MAPPING_COUNT }, (_, i) => {
             const min = i === 0 ? 0 : stageMidpoints[i - 1]
-            const max = i === OPTS.MAPPING_COUNT - 1 ? OPTS.MAX_VALUE : stageMidpoints[i]
+            const max = i === MAPPING_COUNT - 1 ? MAX_VALUE : stageMidpoints[i]
             return max - min
         })
 
         // TODO: Ensure holes arent touching each other, and that they don't isolate single mappings
 
-        const holeCount = Math.floor(random(`${OPTS.MAP_STAGES[stageIdx]}:hole-count`) * (OPTS.MAPPING_HOLES[1] - OPTS.MAPPING_HOLES[0])) + OPTS.MAPPING_HOLES[0]
-        const mappingIdxHoles = shuffle(mappingSizes.map((_, i) => i), `${OPTS.MAP_STAGES[stageIdx]}:holes`).slice(0, holeCount)
+        const holeCount = Math.floor(random(`${MAP_STAGES[stageIdx]}:hole-count`) * (MAPPING_HOLES[1] - MAPPING_HOLES[0])) + MAPPING_HOLES[0]
+        const mappingIdxHoles = shuffle(mappingSizes.map((_, i) => i), `${MAP_STAGES[stageIdx]}:holes`).slice(0, holeCount)
         mappingIdxHoles.sort((a, b) => a - b)
 
         const mappingSections: number[][] = []
@@ -109,7 +116,7 @@ export function generate(OPTS: Options): string {
         for (let sectionIdx = 0; sectionIdx < mappingSections.length; sectionIdx++) {
             const section = mappingSections[sectionIdx]
             // TODO: Ensure each element has been shuffled
-            const sectionIdxShuffle = shuffle(section.map((_, i) => i), `${OPTS.MAP_STAGES[stageIdx]}:${sectionIdx}`)
+            const sectionIdxShuffle = shuffle(section.map((_, i) => i), `${MAP_STAGES[stageIdx]}:${sectionIdx}`)
 
             // Add source and size
             for (let i = 0; i < section.length; i++) {
@@ -132,17 +139,17 @@ export function generate(OPTS: Options): string {
             }
         }
 
-        console.assert(source === OPTS.MAX_VALUE, "Source offset should be equal to MAX_VALUE after all sections")
-        console.assert(dest === OPTS.MAX_VALUE, "Destination offset should be equal to MAX_VALUE after all sections")
+        console.assert(source === MAX_VALUE, "Source offset should be equal to MAX_VALUE after all sections")
+        console.assert(dest === MAX_VALUE, "Destination offset should be equal to MAX_VALUE after all sections")
 
-        shuffle(mappings, `${OPTS.MAP_STAGES[stageIdx]}:mappings`)
+        shuffle(mappings, `${MAP_STAGES[stageIdx]}:mappings`)
         stages.push(mappings)
     }
 
-    const initialText = `${OPTS.MAP_STAGES[0]}s: ${initialRanges.map(r => r.join(" ")).join(" ")}`
+    const initialText = `${MAP_STAGES[0]}s: ${initialRanges.map(r => r.join(" ")).join(" ")}`
 
     const stageTexts = stages.map((stage, i) => {
-        let stageText = `${OPTS.MAP_STAGES[i]}-to-${OPTS.MAP_STAGES[i + 1]} map:\n`
+        let stageText = `${MAP_STAGES[i]}-to-${MAP_STAGES[i + 1]} map:\n`
         stageText += stage.map(n => n.join(" ")).join("\n")
         return stageText
     })
