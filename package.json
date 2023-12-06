@@ -1,0 +1,13 @@
+{
+  "name": "aoc-large-inputs",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "18",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.2"
+  }
+
+}
