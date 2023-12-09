@@ -1,4 +1,4 @@
-import { random } from "../utils"
+import { randomN } from "../utils"
 
 interface Options {
     RACES: number
@@ -18,16 +18,16 @@ export const presets: Record<string, Options> = {
 
 export function generate({ RACES, TIME_RANGE }: Options) {
     const times = Array.from({ length: RACES }, (_, i) => {
-        return Math.floor(random(`time:${i}`) * (TIME_RANGE[1] - TIME_RANGE[0]) + TIME_RANGE[0])
+        return randomN(`time:${i}`, ...TIME_RANGE)
     })
     const distances = times.map(time => {
-        const max = time**2/4 - 5
-        return Math.floor(random(`distance:${time}`) * max)
+        const max = time ** 2 / 4 - 5
+        return randomN(`distance:${time}`, 0, max)
     })
 
     const bigTime = BigInt(times.join(""))
     const bigDistance = BigInt(distances.join(""))
-    console.assert(bigTime**2n / 4n - 5n >= bigDistance, "Distance is too close to max distance")
+    console.assert(bigTime ** 2n / 4n - 5n >= bigDistance, "Distance is too close to max distance")
 
     let timesText = times.map(time => `${time}`)
     let distancesText = distances.map(distance => `${distance}`)

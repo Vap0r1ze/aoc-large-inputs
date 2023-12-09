@@ -44,7 +44,7 @@ export function generate({
     let cards: [number[], number[]][] = []
     for (let cardIdx = 0; cardIdx < TOTAL_CARDS; cardIdx++) {
         // NOTE: Using x**(5/2) as an easing function otherwise the card copies get unwieldy
-        const winnerCount = Math.floor(random(`winner-count:${cardIdx}`)**(5/2) * (MAX_WINS - MIN_WINS)) + MIN_WINS
+        const winnerCount = Math.floor(random(`winner-count:${cardIdx}`) ** (5 / 2) * (MAX_WINS - MIN_WINS)) + MIN_WINS
         const shuffled = shuffle(range(0, MAX_NUM), `shuffle:${cardIdx}`)
         const wins = shuffled.slice(0, WIN_SIZE)
         const draws = shuffled.slice(winnerCount - DRAW_SIZE)

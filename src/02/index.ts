@@ -1,4 +1,4 @@
-import { random } from "../utils";
+import { randomN } from "../utils";
 
 interface Options {
 	TOTAL_GAMES: number
@@ -25,10 +25,6 @@ export const presets: Record<string, Options> = {
 const MAX_CUBES_OF_COLOR = 14
 const CUBE_COLORS = ["red", "green", "blue"]
 
-function rand(seed: string, min: number, max: number) {
-	return Math.floor(random(seed) * (max - min)) + min
-}
-
 export function generate({
 	TOTAL_GAMES,
 	ROUND_RANGE: [MIN_ROUNDS, MAX_ROUNDS],
@@ -37,16 +33,16 @@ export function generate({
 	const lines: string[] = []
 	for (let gameId = 1; gameId <= TOTAL_GAMES; gameId++) {
 		const rounds: string[] = []
-		const numRounds = rand(`game:${gameId}`, MIN_ROUNDS, MAX_ROUNDS)
-        let roundAttempt = 0
+		const numRounds = randomN(`game:${gameId}`, MIN_ROUNDS, MAX_ROUNDS)
+		let roundAttempt = 0
 		for (let round = 0; round < numRounds; round++) {
-            roundAttempt++
+			roundAttempt++
 			const cubes = CUBE_COLORS.map(color => ({
 				color,
-				count: rand(`game:${gameId}:${round}:${color}:${roundAttempt}`, 0, MAX_CUBES_OF_COLOR)
+				count: randomN(`game:${gameId}:${round}:${color}:${roundAttempt}`, 0, MAX_CUBES_OF_COLOR)
 			})).filter(v => v.count > 0)
 			if (cubes.length === 0) {
-                round--
+				round--
 				continue
 			}
 			rounds.push(cubes.map(v => `${v.count} ${v.color}`).join(", "))

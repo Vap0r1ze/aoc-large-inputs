@@ -1,4 +1,4 @@
-import { random, shuffle } from "../utils"
+import { randomN, shuffle } from "../utils"
 
 interface Options {
     MAX_VALUE: number
@@ -6,11 +6,9 @@ interface Options {
     INITIAL_RATIO: number
     MAPPING_HOLES: [number, number]
     MAPPING_COUNT: number
-    MAP_STAGES: string[]
 }
 // The average size of an initial range would be MAX_VALUE / INITIAL_RATIO
 
-const ORIG_MAP_STAGES = "seed soil fertilizer water light temperature humidity location".split(" ")
 export const presets: Record<string, Options> = {
     example: {
         MAX_VALUE: 100,
@@ -18,26 +16,24 @@ export const presets: Record<string, Options> = {
         INITIAL_RATIO: 10,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 4,
-        MAP_STAGES: ORIG_MAP_STAGES,
     },
     normal: {
-        MAX_VALUE: 2**32,
+        MAX_VALUE: 2 ** 32,
         INITIAL_COUNT: 10,
         INITIAL_RATIO: 30,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 50,
-        MAP_STAGES: ORIG_MAP_STAGES,
     },
     large: {
-        MAX_VALUE: 2**32,
+        MAX_VALUE: 2 ** 32,
         INITIAL_COUNT: 1000,
         INITIAL_RATIO: 10000,
         MAPPING_HOLES: [0, 3],
         MAPPING_COUNT: 10000,
-        MAP_STAGES: ORIG_MAP_STAGES,
-        // MAP_STAGES: MAP_STAGES.concat(..."pesticide tillage compost irrigation pollination silage density brix germination ph erosion carbon yield".split(" ")),
     },
 }
+
+const MAP_STAGES = "seed soil fertilizer water light temperature humidity location".split(" ")
 
 type Mapping = [dest: number, source: number, size: number]
 
@@ -47,12 +43,11 @@ export function generate({
     INITIAL_RATIO,
     MAPPING_HOLES,
     MAPPING_COUNT,
-    MAP_STAGES,
 }: Options): string {
     console.assert(INITIAL_RATIO >= INITIAL_COUNT, "Initial ratio should be greater than or equal to initial count")
 
     const initialMidpoints = Array.from({ length: INITIAL_RATIO - 1 }, (_, i) => {
-        const value = Math.floor(random(`initial:${i}`) * MAX_VALUE)
+        const value = randomN(`initial:${i}`, 0, MAX_VALUE)
         return value
     })
     initialMidpoints.sort((a, b) => a - b)
@@ -81,7 +76,7 @@ export function generate({
     for (let stageIdx = 0; stageIdx < MAP_STAGES.length - 1; stageIdx++) {
         // TODO: Fix midpoints that touch each other or the (0, MAX_VALUE) bounds
         const stageMidpoints = Array.from({ length: MAPPING_COUNT - 1 }, (_, i) => {
-            const value = Math.floor(random(`${MAP_STAGES[stageIdx]}:${i}`) * MAX_VALUE)
+            const value = randomN(`${MAP_STAGES[stageIdx]}:${i}`, 0, MAX_VALUE)
             return value
         })
         stageMidpoints.sort((a, b) => a - b)
@@ -98,7 +93,7 @@ export function generate({
 
         // TODO: Ensure holes arent touching each other, and that they don't isolate single mappings
 
-        const holeCount = Math.floor(random(`${MAP_STAGES[stageIdx]}:hole-count`) * (MAPPING_HOLES[1] - MAPPING_HOLES[0])) + MAPPING_HOLES[0]
+        const holeCount = randomN(`${MAP_STAGES[stageIdx]}:hole-count`, ...MAPPING_HOLES)
         const mappingIdxHoles = shuffle(mappingSizes.map((_, i) => i), `${MAP_STAGES[stageIdx]}:holes`).slice(0, holeCount)
         mappingIdxHoles.sort((a, b) => a - b)
 
