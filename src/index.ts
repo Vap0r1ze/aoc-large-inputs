@@ -3,6 +3,7 @@ import * as day2 from "./02"
 import * as day4 from "./04"
 import * as day5 from "./05"
 import * as day6 from "./06"
+import * as day8 from "./08"
 
 const NO_OVERWRITE = process.argv.includes("--no-overwrite")
 Math.random = function () {
@@ -14,6 +15,7 @@ const days = {
     "04": day4,
     "05": day5,
     "06": day6,
+    "08": day8,
 }
 for (const [number, day] of Object.entries(days)) {
     mkdirSync(`dist/${number}`, { recursive: true })

@@ -41,6 +41,10 @@ export function randomBits(seed: string, length: number) {
     return seq
 }
 
+export function randomItem<T>(seed: string, arr: T[]) {
+    return arr[randomN(seed, 0, arr.length)]
+}
+
 // Fisher-Yates shuffle
 export function shuffle<T>(arr: T[], seed: string) {
     const shuffled = arr
