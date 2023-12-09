@@ -1,4 +1,4 @@
-import { randomN } from "../utils";
+import { randomN } from "../utils/random";
 
 interface Options {
 	TOTAL_GAMES: number

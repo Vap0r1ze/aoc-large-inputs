@@ -1,4 +1,4 @@
-import { randomN, shuffle } from "../utils"
+import { randomN, shuffle } from "../utils/random"
 
 interface Options {
     MAX_VALUE: number
